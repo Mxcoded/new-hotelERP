@@ -6,14 +6,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; //use Laravel\Passport\HasApiTokens; //or
+use Laravel\Passport\HasApiTokens; //or use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Traits\HasPermissions;
 
 
 class User extends Authenticatable
 {
-    use HasRoles, HasPermissions, HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasRoles, HasPermissions,  HasFactory, Notifiable;
 
    // Relationship with properties (assuming a user can be associated with multiple properties)
    public function properties()
