@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('department')->nullable();
             $table->boolean('active')->default(true);
             $table->boolean('login_access')->default(false);
+            $table->boolean('is_admin')->default(false);
             $table->string('phone_number')->nullable();
             $table->text('address')->nullable();
             $table->date('hire_date')->nullable();

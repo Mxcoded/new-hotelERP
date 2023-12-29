@@ -11,9 +11,14 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
     // List all users
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->get();
+        return $request->user();
+    }
+
+    public function listAllUser()
+    {
+        $users = User::all();
         return response()->json($users);
     }
 

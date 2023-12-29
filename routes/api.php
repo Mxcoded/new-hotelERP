@@ -52,9 +52,6 @@ use App\Http\Controllers\AuthController;
 */
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-     return $request->user();
-});
 
 
 
@@ -79,12 +76,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     });
 // });
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
 /**
  * User API Routes
  */
 // Grouping User routes under '/users' prefix
 Route::prefix('users')->group(function () {
-    Route::get('/', [UserController::class, 'index']); // List Users with Roles
+    Route::get('/', [UserController::class, 'index']); // Get User Detail for loggin session
+    Route::get('/list-all-user', [UserController::class, 'listAllUser']); // List All users
     Route::get('/{id}', [UserController::class, 'show']); // Get User Details
     Route::post('/', [UserController::class, 'store']); // Create User with Role
     Route::put('/{id}', [UserController::class, 'update']); // Update User and Role
@@ -92,6 +96,7 @@ Route::prefix('users')->group(function () {
     Route::post('/{id}/assign-property', [UserController::class, 'assignProperty']); // Assign User to Property
     Route::get('/properties/{propertyId}', [UserController::class, 'listUsersByProperty']); // List Employees Assigned to a Property
     Route::put('/{id}/update-permissions', [UserController::class, 'updatePermissions']); // Update User Permissions
+
 });
 
 /**
@@ -581,7 +586,7 @@ Route::prefix('payment-gateways')->group(function () {
  * Tax API Routes
  */
 // Grouping Tax routes with common middleware
-Route::middleware(['auth:api'])->group(function () {
+
     Route::prefix('taxes')->group(function() {
         Route::get('/', [TaxController::class, 'index'])->name('taxes.index');// List all taxes
         Route::get('/{taxId}', [TaxController::class, 'show'])->name('taxes.show'); // Get details of a specific tax
@@ -593,7 +598,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('/{taxId}/apply', [TaxController::class, 'applyTax'])->name('taxes.applyTax');// Apply a tax to a specific reservation or folio
         Route::get('/service/{serviceId}', [TaxController::class, 'listApplicableTaxesForService'])->name('taxes.listForService'); // List taxes applicable to a specific service
     });
-});
+
 
 
 
@@ -628,3 +633,4 @@ Route::prefix('room-allocations')->group(function () {
     Route::put('/{id}/change', [RoomAllocationController::class, 'changeAllocation']);// Change Room Allocation
 });
 
+}); //Route auth APi close tag
