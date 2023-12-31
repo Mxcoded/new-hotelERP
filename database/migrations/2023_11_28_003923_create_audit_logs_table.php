@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('action'); // E.g., 'created', 'updated', 'cancelled'
             $table->text('description')->nullable(); // Detailed description of the action
             $table->unsignedBigInteger('performed_by'); // User who performed the action
+            $table->string('ip_address')->nullable(); //Store user Ip address
             $table->timestamps();
 
             $table->foreign('performed_by')->references('id')->on('users');

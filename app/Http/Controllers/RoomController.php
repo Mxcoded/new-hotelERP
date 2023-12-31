@@ -14,20 +14,33 @@ class RoomController extends Controller
         return response()->json($rooms);
     }
 
-    // Show a single room with detailed information
     public function show($id)
     {
         $room = Room::with(['property', 'roomType', 'reservations', 'maintenanceRequests'])->find($id);
+        if (!$room) {
+            return response()->json(['error' => 'Room not found'], 404);
+        }
         return response()->json($room);
     }
 
-    // // Create a new room within a property
-    // public function store(Request $request)
-    // {
-    //     $room = Room::create($request->all());
-    //     // Additional setup logic if required
-    //     return response()->json($room, 201);
-    // }
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'room_type_id' => 'nullable|exists:room_types,id',
+            'property_id' => 'required|exists:properties,id',
+            'floor_id' => 'nullable|exists:floors,id',
+            'number' => 'required|string|unique:rooms,number',
+            'description' => 'nullable|string',
+            'is_available' => 'required|boolean',
+            'base_price' => 'nullable|numeric',
+            // Additional fields validation
+        ]);
+
+        $room = Room::create($validatedData);
+
+        return response()->json($room, 201);
+    }
+
 
     // Update a room's details
     public function update(Request $request, $id)
@@ -39,6 +52,7 @@ class RoomController extends Controller
             'number' => 'sometimes|required|string',
             'description' => 'sometimes|nullable|string',
             'is_available' => 'sometimes|nullable|required|boolean',
+            'base_price' => 'nullable|numeric',
             // Validate additional fields as necessary
         ]);
 
@@ -70,12 +84,30 @@ class RoomController extends Controller
         return response()->json($room);
     }
 
-    // Example: Listing rooms based on their status
+    /**
+     * List rooms by their status.
+     *
+     * @param string $status The status to filter rooms by.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function listByStatus($status)
     {
-        $rooms = Room::where('status', $status)->with('roomType')->get();
-        return response()->json($rooms);
+        try {
+            // Retrieve rooms with the specified status
+            $rooms = Room::where('status', $status)->with('roomType')->get();
+
+            // Check if rooms are found
+            if ($rooms->isEmpty()) {
+                return response()->json(['message' => 'No rooms found with the specified status.'], 200);
+            }
+
+            return response()->json($rooms);
+        } catch (\Exception $e) {
+            // Handle any exceptions that may occur
+            return response()->json(['error' => 'An error occurred while retrieving rooms: ' . $e->getMessage()], 500);
+        }
     }
+
 
     /**
      * List rooms by room type ID.
@@ -91,7 +123,8 @@ class RoomController extends Controller
 
             // Check if rooms are found
             if ($rooms->isEmpty()) {
-                return response()->json(['message' => 'No rooms found for the specified type.'], 404);
+                return response()->json([], 200);
+                //'message' => 'No rooms found for the specified type.' this is what suppose to be in the json array
             }
 
             return response()->json($rooms);
@@ -99,5 +132,11 @@ class RoomController extends Controller
             // Handle any exceptions that may occur
             return response()->json(['error' => 'An error occurred while retrieving rooms: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function listByProperty($propertyId)
+    {
+        $roomTypes = Room::where('property_id', $propertyId)->get();
+        return response()->json($roomTypes);
     }
 }

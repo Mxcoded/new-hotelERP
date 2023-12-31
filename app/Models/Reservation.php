@@ -14,11 +14,12 @@ class Reservation extends Model
     protected $fillable = [
         'guest_id',
         'room_id',
+        'reservation_number',
         'reservation_date',
         'check_in_date',
         'check_out_date',
         'number_of_guests',
-        'price',
+        'price', // Base room price
         'status',
         'payment_method',
         'payment_status',
@@ -26,21 +27,21 @@ class Reservation extends Model
         'balance_amount',
         'special_requests',
         'cancellation_policy_id',
-        'property_id'
-        // 'folio_id'
+        'property_id',
+        // Additional fields as needed
     ];
 
-
+    // Existing relationships
     public function guest()
     {
         return $this->belongsTo(Guest::class, 'guest_id');
     }
-    // Relationship with room
+
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');
     }
-    // Relationship with folios (billing information)
+
     public function folio()
     {
         return $this->hasOne(Folio::class, 'reservation_id');
@@ -51,19 +52,16 @@ class Reservation extends Model
         return $this->belongsTo(CancellationPolicy::class, 'cancellation_policy_id');
     }
 
-    // Relationship with guests (many-to-many for group bookings)
     public function guests()
     {
         return $this->belongsToMany(Guest::class, 'reservation_guest');
     }
 
-    // Relationship with user (if tracking which user made the reservation)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relationships for check-in and check-out (if tracked as separate entities)
     public function checkIn()
     {
         return $this->hasOne(CheckIn::class);
@@ -78,5 +76,72 @@ class Reservation extends Model
     {
         return $this->belongsTo(Property::class);
     }
+
+    // New relationships
+    // Relationship with services (many-to-many)
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'reservation_service')
+            ->withPivot('quantity', 'total_price')
+            ->withTimestamps();
+    }
+
+    // Relationship with promotions or discounts (if applicable)
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'reservation_promotion')
+            ->withPivot('discount_amount')
+            ->withTimestamps();
+    }
+
+    // Additional methods as needed
+    // Example: Calculate total price including services
+    public function calculateTotalPrice()
+    {
+        // Implement logic to calculate total price
+        // including room price, services, and any promotions or discounts
+    }
+    public function auditLogs()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable');
+    }
+
+
+    /*
+*   event listeners to capture and store the IP address
+* @param Request $request
+*@param return void()
+*/
+    protected static function booted()
+    {
+        static::created(function ($reservation) {
+            $reservation->auditLogs()->create([
+                'performed_by' => auth()->id(),
+                'action' => 'created',
+                'description' => 'Reservation created',
+                'ip_address' => request()->ip(),
+            ]);
+        });
+
+        static::updated(function ($reservation) {
+            $reservation->auditLogs()->create([
+                'performed_by' => auth()->id(),
+                'action' => 'updated',
+                'description' => 'Reservation updated',
+                'ip_address' => request()->ip(),
+            ]);
+        });
+
+        static::deleted(function ($reservation) {
+            $reservation->auditLogs()->create([
+                'performed_by' => auth()->id(),
+                'action' => 'deleted',
+                'description' => 'Reservation deleted',
+                'ip_address' => request()->ip(),
+            ]);
+        });
+    }
+
+
     // Add other model properties/methods as needed
 }

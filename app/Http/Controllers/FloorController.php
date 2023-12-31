@@ -259,4 +259,10 @@ class FloorController extends Controller
             return response()->json(['error' => 'Floor deletion failed'], 500);
         }
     }
+
+    public function listByProperty($propertyId)
+    {
+        $roomTypes = Floor::where('property_id', $propertyId)->get();
+        return response()->json($roomTypes);
+    }
 }

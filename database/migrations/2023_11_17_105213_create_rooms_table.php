@@ -43,9 +43,10 @@ return new class extends Migration
             $table->foreignId('floor_id')->nullable()->constrained('floors')->onDelete('set null');
             $table->string('number'); // Room number
             $table->text('description')->nullable();
-            $table->boolean('is_available')->default(true);
-            $table->decimal('base_rate', 10, 2)->nullable(); // Base rate for the room
+            $table->string('status')->default('available'); // Default status can be 'available'
+            $table->decimal('base_price', 10, 2)->nullable(); // Base rate for the room
             $table->json('features')->nullable(); // Additional features as a JSON field
+
             $table->timestamps();
         });
     }

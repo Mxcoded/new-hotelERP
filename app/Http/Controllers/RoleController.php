@@ -52,6 +52,21 @@ class RoleController extends Controller
         return response()->json(['message' => 'Role deleted']);
     }
 
+    public function assignPermissionsToRole(Request $request, $roleId)
+    {
+        $role = Role::findById($roleId);
+
+        $validatedData = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $permissions = $validatedData['permissions'];
+        $role->syncPermissions($permissions);
+
+        return response()->json(['message' => 'Permissions assigned to role successfully!']);
+    }
+
 
 
 

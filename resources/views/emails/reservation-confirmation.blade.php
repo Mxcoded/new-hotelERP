@@ -13,8 +13,10 @@
     <p><strong>Reservation Details:</strong></p>
     <ul>
         <li>Reservation ID: {{ $reservation['id'] }}</li>
+        <li>Reservation ID: {{ $reservation['reservation_number'] }}</li>
         <li>Check-in Date: {{ $reservation['check_in_date'] }}</li>
         <li>Check-out Date: {{ $reservation['check_out_date'] }}</li>
+        <li>Reservation Date: {{ $reservation['reservation_date'] }}</li>
         <!-- Include other reservation details as needed -->
     </ul>
 

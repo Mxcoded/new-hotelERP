@@ -105,5 +105,31 @@ class UserController extends Controller
         return response()->json(null, 204);
     }
 
+    public function assignRoleToUser(Request $request, $userId)
+    {
+        $user = User::find($userId);
+
+        $validatedData = $request->validate([
+            'role' => 'required|exists:roles,name',
+        ]);
+
+        $user->assignRole($validatedData['role']);
+
+        return response()->json(['message' => 'Role assigned to user successfully!']);
+    }
+    public function givePermissionToUser(Request $request, $userId)
+    {
+        $user = User::find($userId);
+
+        $validatedData = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $user->givePermissionTo($validatedData['permissions']);
+
+        return response()->json(['message' => 'Permissions given to user successfully!']);
+    }
+
     // Additional methods as needed...
 }
