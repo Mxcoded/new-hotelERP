@@ -136,7 +136,7 @@ class RoomController extends Controller
 
     public function listByProperty($propertyId)
     {
-        $roomTypes = Room::where('property_id', $propertyId)->get();
-        return response()->json($roomTypes);
+        $rooms = Room::where('property_id', $propertyId)->get();
+        return response()->json($rooms);
     }
 }

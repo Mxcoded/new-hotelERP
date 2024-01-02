@@ -262,7 +262,7 @@ class FloorController extends Controller
 
     public function listByProperty($propertyId)
     {
-        $roomTypes = Floor::where('property_id', $propertyId)->get();
-        return response()->json($roomTypes);
+        $floor = Floor::where('property_id', $propertyId)->get();
+        return response()->json($floor);
     }
 }

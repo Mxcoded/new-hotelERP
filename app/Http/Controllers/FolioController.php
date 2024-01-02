@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Folio;
+use App\Models\folio_charges;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Exception;
 
 class FolioController extends Controller
 {
@@ -52,13 +57,81 @@ class FolioController extends Controller
     // Example: Adding charges to a folio
     public function addCharge($id, Request $request)
     {
-        // Logic to add additional charges to the folio
+        $validatedData = $request->validate([
+            'description' => 'required|string',
+            'amount' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Find the folio by ID
+            $folio = Folio::findOrFail($id);
+
+            // Create a new folio charge
+            $folioCharge = new Folio_charges([
+                'folio_id' => $folio->id,
+                'description' => $validatedData['description'],
+                'amount' => $validatedData['amount'],
+                'date_incurred' => now(), // Set the charge date to now
+            ]);
+            $folioCharge->save();
+
+            // Update the folio's total charges and balance
+            $folio->total_charges += $validatedData['amount'];
+            $folio->balance = $folio->total_charges - $folio->total_payments; // Update the balance
+            $folio->save();
+
+            DB::commit();
+            return response()->json(['success' => true, 'folioCharge' => $folioCharge], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
+
 
     // Example: Processing a payment against a folio
     public function processPayment($id, Request $request)
     {
-        // Logic for recording a payment against the folio
+        $validatedData = $request->validate([
+            'folio_id' => 'required|exists:folios,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'required|string', // e.g., cash, credit card
+            // Additional fields like 'transaction_id' might be needed depending on your requirement
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Retrieve the folio
+            $folio = Folio::findOrFail($validatedData['folio_id']);
+
+            // Create the payment record
+            $payment = new Payment([
+                'folio_id' => $folio->id,
+                'guest_id' => $validatedData['guest_id'],
+                'property_id' => $validatedData['property_id'],
+                'amount' => $validatedData['amount'],
+                'payment_method' => $validatedData['payment_method'],
+                'payment_date' => now(), // Assuming current date as payment date
+                'transaction_id' => Str::uuid(), // Generate a unique transaction ID
+                'status' => 'completed', // Assuming immediate completion, adjust as needed
+                'notes' => 'Payment received2', // Optional notes
+                'processed_by' => auth()->user()->id, // Assuming authenticated user
+            ]);
+            $payment->save();
+
+            // Update folio's total payments and balance
+            $folio->total_payments += $validatedData['amount'];
+            $folio->balance = $folio->total_charges - $folio->total_payments;
+            $folio->save();
+
+            DB::commit();
+            return response()->json(['success' => true, 'payment' => $payment], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
-

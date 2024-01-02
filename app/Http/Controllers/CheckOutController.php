@@ -101,4 +101,11 @@ class CheckOutController extends Controller
     {
         // Logic for finalizing the billing process for a check-out
     }
+
+    //List Checkout by property
+    public function listByProperty($propertyId)
+    {
+        $checkout = CheckOut::where('property_id', $propertyId)->get();
+        return response()->json($checkout);
+    }
 }

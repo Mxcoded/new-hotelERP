@@ -252,7 +252,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [CheckInController::class, 'store']); // Record Check-In
         Route::put('/{id}', [CheckInController::class, 'update']); // Update Check-In
         Route::delete('/{id}', [CheckInController::class, 'destroy']); // Delete Check-In Record
-        Route::get('/properties/{propertyId}', [CheckInController::class, 'listCheckInsByProperty']); // List Check-Ins by Property
+        Route::get('/properties/{propertyId}', [CheckInController::class, 'listByProperty']); // List Check-Ins by Property
         Route::get('/guests/{guestId}', [CheckInController::class, 'listCheckInsByGuest']); // List Check-Ins by Guest
         Route::post('/direct', [CheckInController::class, 'handleDirectCheckIn']); // Handle Direct Check-In
     });
@@ -268,7 +268,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [CheckOutController::class, 'store']); // Record Check-Out
         Route::put('/{id}', [CheckOutController::class, 'update']); // Update Check-Out
         Route::delete('/{id}', [CheckOutController::class, 'destroy']); // Delete Check-Out Record
-        Route::get('/properties/{propertyId}', [CheckOutController::class, 'listCheckOutsByProperty']); // List Check-Outs by Property
+        Route::get('/properties/{propertyId}', [CheckOutController::class, 'listByProperty']); // List Check-Outs by Property
         Route::get('/guests/{guestId}', [CheckOutController::class, 'listCheckOutsByGuest']); // List Check-Outs by Guest
         Route::put('/{id}/finalize-billing', [CheckOutController::class, 'finalizeBilling']); // Finalize Billing for Check-Out
     });

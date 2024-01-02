@@ -9,6 +9,7 @@ use App\Models\Folio;
 use App\Services\GuestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use illuminate\Support\Str;
 use Carbon\Carbon;
 use Exception;
 
@@ -76,7 +77,7 @@ class CheckInController extends Controller
 
         // Check room availability
         $room = Room::find($validatedData['room_id']);
-        if (!$room || !$room->is_available) {
+        if (!$room || $room->status !='available') {
             return response()->json(['message' => 'Room is not available'], 400);
         }
 
@@ -111,7 +112,7 @@ class CheckInController extends Controller
         );
 
         // Update room status
-        $room->update(['is_available' => false]);
+        $room->update(['status' => 'occupied']);
 
         // Additional logic for guest notifications, etc.
         // ...
@@ -167,17 +168,31 @@ class CheckInController extends Controller
         try {
             DB::beginTransaction();
 
-            // Find an available room of the specified type
-            $availableRoom = Room::where('room_type_id', $validatedData['room_type_id'])
-                ->where('is_available', true)
-                ->first();
+            // Find an available room based on room type, dates, and property
+            $availableRoom = Room::where([
+                ['room_type_id', $validatedData['room_type_id']],
+                ['status', 'available'], // Here we use 'status' instead of 'is_available'
+                ['property_id', $validatedData['property_id']],
+            ])->first();
 
             if (!$availableRoom) {
-                return response()->json(['message' => 'No available rooms for the selected type'], 404);
+                return response()->json(['message' => 'No available rooms for the selected date or room type'], 404);
             }
 
             // Handle guest information
             $guestId = $validatedData['guest_id'] ?? $this->createNewGuest($request->all(), $guestService);
+
+            $reservationNumber = 'BP' . strtoupper(Str::random(8));
+            // Create a new reservation
+            $reservation = Reservation::create([
+                'guest_id' => $guestId,
+                'room_id' => $availableRoom->id,
+                'check_in_date' => $validatedData['check_in_date'],
+                'check_out_date' => $validatedData['check_out_date'],
+                'status' => 'checked-in',
+                'reservation_number' => $reservationNumber,
+                // Other necessary fields
+            ]);
 
             // Create a check-in record directly
             $checkIn = CheckIn::create([
@@ -189,7 +204,7 @@ class CheckInController extends Controller
             ]);
 
             // Handle financials in the folio
-            $roomRate = $availableRoom->rate; // Assuming rate is defined in Room model
+            $roomRate = $availableRoom->base_price; // Assuming rate is defined in Room model
             $stayDuration = Carbon::parse($validatedData['check_in_date'])->diffInDays(Carbon::parse($validatedData['check_out_date']));
             $totalStayCost = $validatedData['price']; //$roomRate * $stayDuration;
             $advancePayment = $validatedData['advance_payment'] ?? 0;
@@ -206,7 +221,7 @@ class CheckInController extends Controller
             ]);
 
             // Update room status
-            $availableRoom->is_available = false;
+            $availableRoom->status = 'occupied';
             $availableRoom->save();
 
             DB::commit();
@@ -218,9 +233,18 @@ class CheckInController extends Controller
         }
     }
 
+    //List Checkin by property
+    public function listByProperty($propertyId)
+    {
+        $checkIn = CheckIn::where('property_id', $propertyId)->get();
+        return response()->json($checkIn);
+    }
+    //private function
     private function createNewGuest($data, GuestService $guestService)
     {
         $guest = $guestService->createGuest($data);
         return $guest->id;
     }
+
+
 }
