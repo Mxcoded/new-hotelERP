@@ -36,12 +36,14 @@ return new class extends Migration
             $table->string('back_id_image')->nullable(); // URL or path to the back ID image
             $table->string('guest_image')->nullable(); // URL or path to the guest's image
             $table->json('preferences')->nullable(); // Stores guest preferences
+            // New financial columns
+            $table->decimal('total_balance', 10, 2)->default(0); // Tracks the overall financial balance
+            $table->decimal('credit_limit', 10, 2)->default(0); // Optional: A credit limit for the guest
             $table->unsignedBigInteger('loyalty_program_id')->nullable();
             $table->timestamps();
 
             $table->foreign('loyalty_program_id')->references('id')->on('loyalty_programs');
         });
-
     }
 
     /**

@@ -28,11 +28,13 @@ class Guest extends Model
         'zip_code',
         'address',
         'identity_type',
-        'identity_id',
+        'identity_id', //Nin 0r SSN Or Country identification number
         'front_id_image',
         'back_id_image',
         'guest_image',
         'preferences',
+        'total_balance',
+        'credit_limit',
         'loyalty_program_id',
         // Add other fields as required
     ];

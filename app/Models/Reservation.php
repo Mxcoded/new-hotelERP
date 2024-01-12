@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reservation extends Model
 {
-    use HasFactory;
-
+    //  use HasFactory;
+    // Constants for reservation statuses
+    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_CHECKED_IN = 'checked-in';
+    const STATUS_NO_SHOW = 'no-show';
+    const STATUS_CANCELED = 'canceled';
     protected $table = 'reservations';
 
     protected $fillable = [
@@ -18,12 +22,14 @@ class Reservation extends Model
         'reservation_date',
         'check_in_date',
         'check_out_date',
+        'total_nights',
         'number_of_guests',
         'price', // Base room price
         'status',
         'payment_method',
         'payment_status',
         'amount_paid',
+        'price_discount',
         'balance_amount',
         'special_requests',
         'cancellation_policy_id',
@@ -45,6 +51,13 @@ class Reservation extends Model
     public function folio()
     {
         return $this->hasOne(Folio::class, 'reservation_id');
+    }
+    /**
+     * Get the folios associated with the reservation.
+     */
+    public function folios()
+    {
+        return $this->hasMany(Folio::class);
     }
 
     public function cancellationPolicy()

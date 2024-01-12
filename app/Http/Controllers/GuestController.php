@@ -38,7 +38,7 @@ class GuestController extends Controller
     }
 
 
-    // Create a new guest profilepublic function store(Request $request)
+    // Create a new guest profile
     public function store(Request $request, GuestService $guestService)
     {
         // Validate the request data
@@ -68,35 +68,25 @@ class GuestController extends Controller
             // Add other validation rules as necessary
         ]);
 
-        // Handle the image file
-        if ($request->hasFile('front_id_image')) {
-            $frontImagePath = $request->file('front_id_image')->store('id_images', 'public'); // Storing locally
-            $validatedData['front_id_image'] = $frontImagePath; // Save the path in the database
-        }
+        // Handle the image files with a dedicated method
+        $this->handleGuestImages($request, $validatedData);
 
-        if ($request->hasFile('back_id_image')) {
-            $backImagePath = $request->file('back_id_image')->store('id_images', 'public'); // Storing locally
-            $validatedData['back_id_image'] = $backImagePath; // Save the path in the database
-        }
-
-        if ($request->hasFile('guest_image')) {
-            $guestImagePath = $request->file('guest_image')->store('guest_photos', 'public'); // Storing locally
-            $validatedData['guest_image'] = $guestImagePath; // Save the path in the database
-        }
-
-
-
-        // Create the guest
+        // Create the guest using the service
         $guest = $guestService->createGuest($validatedData);
-
-        // Additional logic for initial setup
-        // For example, link guest to a reservation if reservation info is provided
-        // Set initial preferences if available in the request
 
         // Return the newly created guest
         return response()->json($guest, 201);
     }
 
+    private function handleGuestImages(Request $request, &$validatedData)
+    {
+        foreach (['front_id_image', 'back_id_image', 'guest_image'] as $imageField) {
+            if ($request->hasFile($imageField) && $request->file($imageField)->isValid()) {
+                $path = $request->file($imageField)->store('images/guests', 'public');
+                $validatedData[$imageField] = Storage::url($path); // Store the URL for easy access
+            }
+        }
+    }
 
     // Update a guest's information
     public function update(Request $request, $id)
@@ -104,6 +94,8 @@ class GuestController extends Controller
         // Validate the request data
         // Include validation rules similar to the `store` method
         // Make sure to handle the 'unique' rule for the 'email' field
+        // Find the guest or fail with a 404 response
+        $guest = Guest::findOrFail($id);
         $validatedData = $request->validate([
             'title' => 'sometimes|nullable|string|max:255',
             'first_name' => 'sometimes|required|string|max:255',
@@ -114,7 +106,7 @@ class GuestController extends Controller
             'nationality' => 'sometimes|nullable|string',
             'vip' => 'sometimes|boolean',
             'contact_type' => 'sometimes|nullable|string',
-            'email' => 'sometimes|nullable|email|unique:guests,email',
+            'email' => 'sometimes|nullable|email|unique:guests,email,' . $guest->id, // Unique email except for the current guest
             'country_code' => 'sometimes|nullable|string',
             'mobile_number' => 'sometimes|nullable|string',
             'country' => 'sometimes|nullable|string',
@@ -131,27 +123,11 @@ class GuestController extends Controller
 
         ]);
 
-        // Find the guest or fail with a 404 response
-        $guest = Guest::findOrFail($id);
+        // Handle the image file updates using a dedicated method
+    $this->handleGuestImages($request, $validatedData);
 
-        // Handle image file updates
-        if ($request->hasFile('front_id_image')) {
-            $frontImagePath = $request->file('front_id_image')->store('id_images', 'public');
-            $validatedData['front_id_image'] = $frontImagePath;
-        }
-
-        if ($request->hasFile('back_id_image')) {
-            $backImagePath = $request->file('back_id_image')->store('id_images', 'public');
-            $validatedData['back_id_image'] = $backImagePath;
-        }
-
-        if ($request->hasFile('guest_image')) {
-            $guestImagePath = $request->file('guest_image')->store('guest_photos', 'public');
-            $validatedData['guest_image'] = $guestImagePath;
-        }
-
-        // Update the guest with validated data
-        $guest->update($validatedData);
+    // Update the guest with the validated data
+    $guest->update($validatedData);
 
         // Additional logic (if any)
         // For example, handle updates to guest preferences or link updated information to other related models

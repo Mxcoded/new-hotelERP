@@ -76,6 +76,7 @@ class FloorController extends Controller
                 'property_id' => $floor->property_id,
                 'floor_id' => $floor->id,
                 'number' => $roomNumber,
+                'status' => "available",
                 // Add other default room attributes here
             ]);
         }

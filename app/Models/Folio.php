@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Folio extends Model
-{
+class Folio extends Model {
     use HasFactory;
     protected $table = 'folios';
 
@@ -17,40 +16,43 @@ class Folio extends Model
     ];
 
     // If you have a table for tracking individual folio charges, you can define a relationship here
-    public function charges()
-    {
-        return $this->hasMany(Folio_charges::class, 'folio_id');
+
+    public function charges() {
+        return $this->hasMany( Folio_charges::class, 'folio_id' );
     }
 
     // Additional relationships or methods as needed
 
     // Relationship with reservation
-    public function reservation()
-    {
-        return $this->belongsTo(Reservation::class);
+
+    public function reservation() {
+        return $this->belongsTo( Reservation::class );
     }
 
     // Relationship with guest
-    public function guest()
-    {
-        return $this->belongsTo(Guest::class);
+
+    public function guest() {
+        return $this->belongsTo( Guest::class );
     }
 
     // Relationship with property
-    public function property()
-    {
-        return $this->belongsTo(Property::class);
+
+    public function property() {
+        return $this->belongsTo( Property::class );
     }
 
     // Relationship with transactions
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class);
+
+    public function transactions() {
+        return $this->hasMany( Transaction::class );
     }
 
-    public function checkIn()
-    {
-        return $this->belongsTo(CheckIn::class);
+    public function checkIn() {
+        return $this->belongsTo( CheckIn::class );
+    }
+
+    public function payments() {
+        return $this->hasMany( Payment::class );
     }
 
     // Add other model properties/methods as needed

@@ -79,6 +79,7 @@ use App\Http\Controllers\ServiceController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+//Route::post('folios/generate-invoice/{reservationId}', [FolioController::class, 'generateInvoice']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -218,7 +219,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [ReservationController::class, 'update']); // Update Reservation
         Route::delete('/{id}', [ReservationController::class, 'destroy']); // Cancel Reservation
         Route::post('/availability', [ReservationController::class, 'checkAvailability']); // Check Reservation Availability
-        Route::get('/properties/{propertyId}', [ReservationController::class, 'listReservationsByProperty']); // List Reservations for a Property
+        Route::get('/properties/{propertyId}', [ReservationController::class, 'listByProperty']); // List Reservations for a Property
+        Route::post('/{reservationId}/cancel', [ReservationController::class, 'cancelReservation']);
     });
 
 
@@ -254,6 +256,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [CheckInController::class, 'destroy']); // Delete Check-In Record
         Route::get('/properties/{propertyId}', [CheckInController::class, 'listByProperty']); // List Check-Ins by Property
         Route::get('/guests/{guestId}', [CheckInController::class, 'listCheckInsByGuest']); // List Check-Ins by Guest
+        Route::get('/rooms/{roomId}', [CheckInController::class, 'listByRooms']); //filiter for displaying room occupant info
         Route::post('/direct', [CheckInController::class, 'handleDirectCheckIn']); // Handle Direct Check-In
     });
 
@@ -288,6 +291,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/payments', [FolioController::class, 'processPayment']); // Process Payment on Folio
         Route::get('/guests/{guestId}', [FolioController::class, 'listFoliosByGuest']); // List Folios by Guest
         Route::get('/properties/{propertyId}', [FolioController::class, 'listFoliosByProperty']); // List Folios by Property
+        Route::post('/generate-invoice/{reservationId}', [FolioController::class, 'generateInvoice']); // Generate and send invoice
     });
 
 

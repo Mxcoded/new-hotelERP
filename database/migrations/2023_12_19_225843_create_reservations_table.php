@@ -16,6 +16,7 @@ class CreateReservationsTable extends Migration
             $table->date('check_in_date');
             $table->date('check_out_date');
             $table->integer('number_of_guests');
+            $table->integer('total_nights')->unsigned();
             $table->decimal('price', 10, 2);
             $table->string('status');
             $table->string('payment_method');
@@ -27,6 +28,13 @@ class CreateReservationsTable extends Migration
             $table->foreignId('folio_id')->nullable()->constrained('folios')->change();
             $table->foreignId('property_id')->constrained('properties');
             $table->timestamps(); // Creates 'created_at' and 'updated_at' columns
+
+            // New fields
+            $table->boolean('is_early_checkin')->default(false); // Indicates if the reservation involved an early check-in
+            $table->boolean('is_late_checkout')->default(false); // Indicates if the reservation had a late checkout
+            $table->dateTime('actual_check_in_time')->nullable(); // The actual time of check-in
+            $table->dateTime('actual_check_out_time')->nullable(); // The actual time of check-out
+
         });
     }
 
@@ -35,4 +43,3 @@ class CreateReservationsTable extends Migration
         Schema::dropIfExists('reservations');
     }
 };
-

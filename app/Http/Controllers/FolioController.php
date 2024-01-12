@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Folio;
 use App\Models\folio_charges;
 use App\Models\Payment;
+use App\Services\FolioService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Exception;
@@ -13,6 +15,7 @@ use Exception;
 class FolioController extends Controller
 {
     // List all folios
+
     public function index()
     {
         $folios = Folio::with(['reservation', 'guest', 'checkIn', 'charges'])->get();
@@ -20,6 +23,7 @@ class FolioController extends Controller
     }
 
     // Show a single folio with detailed information
+
     public function show($id)
     {
         $folio = Folio::with(['reservation', 'guest', 'checkIn', 'charges'])->find($id);
@@ -27,15 +31,17 @@ class FolioController extends Controller
     }
 
     // Create a new folio for a reservation
+
     public function store(Request $request)
     {
         // Validate request, ensure related reservation exists
         $folio = Folio::create($request->all());
-        // Additional logic for initializing folio items (e.g., room charges)
+        // Additional logic for initializing folio items ( e.g., room charges )
         return response()->json($folio, 201);
     }
 
-    // Update a folio (e.g., adding charges, processing payments)
+    // Update a folio ( e.g., adding charges, processing payments )
+
     public function update(Request $request, $id)
     {
         $folio = Folio::findOrFail($id);
@@ -44,7 +50,8 @@ class FolioController extends Controller
         return response()->json($folio, 200);
     }
 
-    // Delete a folio (if necessary)
+    // Delete a folio ( if necessary )
+
     public function destroy($id)
     {
         Folio::find($id)->delete();
@@ -55,11 +62,13 @@ class FolioController extends Controller
     // Additional methods for specific operations...
 
     // Example: Adding charges to a folio
+
     public function addCharge($id, Request $request)
     {
         $validatedData = $request->validate([
             'description' => 'required|string',
-            'amount' => 'required|numeric|min:0'
+            'amount' => 'required|numeric|min:0',
+            'chargeType' => 'required|string'
         ]);
 
         try {
@@ -79,7 +88,7 @@ class FolioController extends Controller
 
             // Update the folio's total charges and balance
             $folio->total_charges += $validatedData['amount'];
-            $folio->balance = $folio->total_charges - $folio->total_payments; // Update the balance
+            $folio->balance = $folio->total_charges - $folio->total_payments;  // Update the balance
             $folio->save();
 
             DB::commit();
@@ -96,6 +105,9 @@ class FolioController extends Controller
     {
         $validatedData = $request->validate([
             'folio_id' => 'required|exists:folios,id',
+            'guest_id' => 'required|exists:guests,id',
+            'reservation_id' => 'required|exists:reservations,id',
+            'property_id' => 'required|exists:properties,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string', // e.g., cash, credit card
             // Additional fields like 'transaction_id' might be needed depending on your requirement
@@ -111,20 +123,21 @@ class FolioController extends Controller
             $payment = new Payment([
                 'folio_id' => $folio->id,
                 'guest_id' => $validatedData['guest_id'],
+                'reservation_id' => $validatedData['reservation_id'],
                 'property_id' => $validatedData['property_id'],
                 'amount' => $validatedData['amount'],
                 'payment_method' => $validatedData['payment_method'],
                 'payment_date' => now(), // Assuming current date as payment date
                 'transaction_id' => Str::uuid(), // Generate a unique transaction ID
                 'status' => 'completed', // Assuming immediate completion, adjust as needed
-                'notes' => 'Payment received2', // Optional notes
+                'notes' => 'Payment received', // Optional notes
                 'processed_by' => auth()->user()->id, // Assuming authenticated user
             ]);
             $payment->save();
 
             // Update folio's total payments and balance
             $folio->total_payments += $validatedData['amount'];
-            $folio->balance = $folio->total_charges - $folio->total_payments;
+            $folio->balance = $folio->total_payments - $folio->total_charges;
             $folio->save();
 
             DB::commit();
@@ -132,6 +145,25 @@ class FolioController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    protected $folioService;
+
+    public function __construct(FolioService $folioService)
+    {
+        $this->folioService = $folioService;
+    }
+
+    public function generateInvoice($reservationId)
+    {
+        try {
+
+            $invoice = $this->folioService->generateInvoice($reservationId);
+
+            return response()->json(['success' => true, 'invoice' => $invoice]);
+        } catch (Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 }

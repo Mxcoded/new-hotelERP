@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Exception;
 
 class RoomController extends Controller
 {
@@ -53,6 +54,8 @@ class RoomController extends Controller
             'description' => 'sometimes|nullable|string',
             'is_available' => 'sometimes|nullable|required|boolean',
             'base_price' => 'nullable|numeric',
+            'status' => 'sometimes|string|nullable',
+            'features' => 'sometimes|JSON|nullable',
             // Validate additional fields as necessary
         ]);
 
@@ -128,7 +131,7 @@ class RoomController extends Controller
             }
 
             return response()->json($rooms);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Handle any exceptions that may occur
             return response()->json(['error' => 'An error occurred while retrieving rooms: ' . $e->getMessage()], 500);
         }
